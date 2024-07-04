@@ -124,9 +124,14 @@ _attribute_no_inline_ int b9x_bt_blc_mac_init(uint8_t *bt_mac)
 	/* The random static address will be generated on every reboot */
 	bt_mac[5] |= 0xC0; /* random static by default */
 	#endif
-	/*Get the ramdom mac address from zb which will passed in the user-para sector */
+	const uint8_t mac_empty[6]={0xff,0xff,0xff,0xff,0xff,0xff};
+	/* Get the ramdom mac address from zb which will passed in the user-para sector */
 	err = flash_read(USER_PARTITION_DEVICE, USER_PARTITION_OFFSET
 			+ USER_PARA_MAC_OFFSET, bt_mac, BLE_ADDR_LEN );
+	if(memcmp(bt_mac , mac_empty,sizeof(mac_empty)) == 0){
+		// if mac address is empty, use random instead .
+		generateRandomNum(BLE_ADDR_LEN, bt_mac);
+	}
 	bt_mac[5] |= 0xC0; /* random static by default */
 
 #endif
