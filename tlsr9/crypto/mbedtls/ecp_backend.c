@@ -14,6 +14,15 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ecc_b9x, CONFIG_MBEDTLS_LOG_LEVEL);
 
+#if CONFIG_SOC_RISCV_TELINK_B92
+#include <ext_driver/driver_lib/ext_lib.h>
+#elif CONFIG_SOC_RISCV_TELINK_B95
+#include <ext_driver/driver_lib/ext_lib.h>
+#elif CONFIG_SOC_RISCV_TELINK_TL321X
+#include <ext_driver/driver_lib/ext_lib.h>
+#endif
+#include <ext_driver/ext_misc.h>
+
 #ifndef PKE_OPERAND_MAX_WORD_LEN
 #define PKE_OPERAND_MAX_WORD_LEN                     8
 #endif /* PKE_OPERAND_MAX_WORD_LEN */
@@ -230,7 +239,24 @@ inline static uint8_t pke_x25519_point_mul(mont_curve_t *curve,
 }
 #endif
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
+#if CONFIG_SOC_RISCV_TELINK_B91
+static mont_curve_t x25519 = {
+	.mont_p_bitLen = 255,
+	.mont_p = (unsigned int[]){
+		0xffffffed, 0xffffffff, 0xffffffff, 0xffffffff,
+		0xffffffff, 0xffffffff, 0xffffffff, 0x7fffffff
+	},
+	.mont_p_h = (unsigned int[]){
+		0x000005a4, 0x00000000, 0x00000000, 0x00000000,
+		0x00000000, 0x00000000, 0x00000000, 0x00000000
+	},
+	.mont_p_n1 = (unsigned int[]){0x286bca1b},
+	.mont_a24 = (unsigned int[]){
+		0x0001db41, 0x00000000, 0x00000000, 0x00000000,
+		0x00000000, 0x00000000, 0x00000000, 0x00000000
+	}
+};
+#elif CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_B95 || CONFIG_SOC_RISCV_TELINK_TL321X
 static mont_curve_t x25519 = {
 	.MONT_P_BITLEN = 255,
 	.MONT_P = (unsigned int[]){
@@ -437,24 +463,44 @@ int telink_b9x_ecp_mul_restartable(mbedtls_ecp_group *grp,
 		}
 #endif /* MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED */
 #if defined(MBEDTLS_ECP_MONTGOMERY_ENABLED)
-		if (mbedtls_ecp_get_type(grp) == MBEDTLS_ECP_TYPE_MONTGOMERY) {
-			mont_curve_t *mont_curve = mont_curve_get(grp);
+			if (mbedtls_ecp_get_type(grp) ==
+				MBEDTLS_ECP_TYPE_MONTGOMERY) {
 
-			if (!mont_curve) {
-				memset(ms, 0, sizeof(ms));
-				memset(Qx, 0, sizeof(Qx));
-				memset(Qy, 0, sizeof(Qy));
-				break;
-			}
-			telink_b9x_ecp_lock();
-			int r = pke_x25519_point_mul(mont_curve, ms, Qx, Qx);
-			telink_b9x_ecp_unlock();
-			if (r != PKE_SUCCESS) {
-				LOG_ERR("EC multiplication error");
-				memset(ms, 0, sizeof(ms));
-				memset(Qx, 0, sizeof(Qx));
-				memset(Qy, 0, sizeof(Qy));
-				break;
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+				mont_curve_t *mont_curve = mont_curve_get(grp);
+
+				if (mont_curve != NULL) {
+					(void)mbedtls_mpi_write_binary_le(m,
+						(unsigned char *)ms,
+						sizeof(ms));
+					(void)mbedtls_mpi_write_binary_le(&P->X,
+						(unsigned char *)Qx,
+						sizeof(Qx));
+
+					result =
+					MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
+
+					mbedtls_ecp_lock();
+					if (pke_x25519_point_mul(mont_curve,
+						ms, Qx, Qx) ==
+					    PKE_SUCCESS) {
+						(void)
+						mbedtls_mpi_read_binary_le(
+							&R->X,
+							(const unsigned char *)
+							Qx,
+							sizeof(Qx));
+						(void)mbedtls_mpi_lset(
+							&R->Y, 0);
+						(void)mbedtls_mpi_lset(
+							&R->Z, 1);
+						result = 0;
+					}
+					mbedtls_ecp_unlock();
+				}
+#elif CONFIG_SOC_RISCV_TELINK_B95
+				result = ecp_mul_mxz( grp, R, m, P, f_rng, p_rng );
+#endif
 			}
 			memset(Qy, 0, sizeof(Qy));
 		}
