@@ -33,16 +33,15 @@
 #include "lib/include/clock.h"
 #include "lib/include/core.h"
 #include "dma.h"
-//#include "eccp_curve.h"
-// #include "emi.h"
+
 #include "lib/include/flash_base.h"
 #include "flash.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "lpc.h"
-//#include "mdec.h"
+
 #include "lib/include/mspi.h"
-//#include "pke_utility.h"
+
 #include "lib/include/pke/pke.h"
 #include "lib/include/plic.h"
 #include "lib/include/pm/pm.h"
