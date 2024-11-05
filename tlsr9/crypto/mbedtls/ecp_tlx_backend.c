@@ -12,14 +12,7 @@
 
 #include <zephyr/sys/util.h>
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ecc_b9x, CONFIG_MBEDTLS_LOG_LEVEL);
-
-#if CONFIG_SOC_RISCV_TELINK_B92
-#include <ext_driver/driver_lib/ext_lib.h>
-#elif CONFIG_SOC_RISCV_TELINK_B95
-#include <ext_driver/driver_lib/ext_lib.h>
-#endif
-#include <ext_driver/ext_misc.h>
+LOG_MODULE_REGISTER(ecc_tlx, CONFIG_MBEDTLS_LOG_LEVEL);
 
 #ifndef PKE_OPERAND_MAX_WORD_LEN
 #define PKE_OPERAND_MAX_WORD_LEN                     8
@@ -53,7 +46,7 @@ static eccp_curve_t secp256r1_curve_dat = {
 		0x00000003, 0x00000000, 0xffffffff, 0xfffffffb,
 		0xfffffffe, 0xffffffff, 0xfffffffd, 0x00000004
 	},
-	.eccp_p_n1 = (unsigned int[]){0x00000001},
+	.eccp_p_n0 = (unsigned int[]){0x00000001},
 	.eccp_a = (unsigned int[]){
 		0xfffffffc, 0xffffffff, 0xffffffff, 0x00000000,
 		0x00000000, 0x00000000, 0x00000001, 0xffffffff
@@ -77,7 +70,7 @@ static eccp_curve_t secp256k1_curve_dat = {
 		0x000e90a1, 0x000007a2, 0x00000001, 0x00000000,
 		0x00000000, 0x00000000, 0x00000000, 0x00000000
 	},
-	.eccp_p_n1 = (unsigned int[]){0xd2253531},
+	.eccp_p_n0 = (unsigned int[]){0xd2253531},
 	.eccp_a = (unsigned int[]){
 		0x00000000, 0x00000000, 0x00000000, 0x00000000,
 		0x00000000, 0x00000000, 0x00000000, 0x00000000
@@ -101,7 +94,7 @@ static eccp_curve_t BP256r1_curve_dat = {
 		0xa6465b6c, 0x8cfedf7b, 0x614d4f4d, 0x5cce4c26,
 		0x6b1ac807, 0xa1ecdacd, 0xe5957fa8, 0x4717aa21
 	},
-	.eccp_p_n1 = (unsigned int[]){0xcefd89b9},
+	.eccp_p_n0 = (unsigned int[]){0xcefd89b9},
 	.eccp_a = (unsigned int[]){
 		0xf330b5d9, 0xe94a4b44, 0x26dc5c6c, 0xfb8055c1,
 		0x417affe7, 0xeef67530, 0xfc2c3057, 0x7d5a0975
@@ -125,7 +118,7 @@ static eccp_curve_t secp224r1_curve_dat = {
 		0x00000001, 0x00000000, 0x00000000, 0xfffffffe,
 		0xffffffff, 0xffffffff, 0x00000000
 	},
-	.eccp_p_n1 = (unsigned int[]){0xffffffff},
+	.eccp_p_n0 = (unsigned int[]){0xffffffff},
 	.eccp_a = (unsigned int[]){
 		0xfffffffe, 0xffffffff, 0xffffffff, 0xfffffffe,
 		0xffffffff, 0xffffffff, 0xffffffff
@@ -149,7 +142,7 @@ static eccp_curve_t secp224k1_curve_dat = {
 		0x02c23069, 0x00003526, 0x00000001, 0x00000000,
 		0x00000000, 0x00000000, 0x00000000
 	},
-	.eccp_p_n1 = (unsigned int[]){0x198d139b},
+	.eccp_p_n0 = (unsigned int[]){0x198d139b},
 	.eccp_a = (unsigned int[]){
 		0x00000000, 0x00000000, 0x00000000, 0x00000000,
 		0x00000000, 0x00000000, 0x00000000
@@ -173,7 +166,7 @@ static eccp_curve_t secp192r1_curve_dat = {
 		0x00000001, 0x00000000, 0x00000002, 0x00000000,
 		0x00000001, 0x00000000
 	},
-	.eccp_p_n1 = (unsigned int[]){0x00000001},
+	.eccp_p_n0 = (unsigned int[]){0x00000001},
 	.eccp_a = (unsigned int[]){
 		0xfffffffc, 0xffffffff, 0xfffffffe, 0xffffffff,
 		0xffffffff, 0xffffffff
@@ -197,7 +190,7 @@ static eccp_curve_t secp192k1_curve_dat = {
 		0x013c4fd1, 0x00002392, 0x00000001, 0x00000000,
 		0x00000000, 0x00000000
 	},
-	.eccp_p_n1 = (unsigned int[]){0x7446d879},
+	.eccp_p_n0 = (unsigned int[]){0x7446d879},
 	.eccp_a = (unsigned int[]){
 		0x00000000, 0x00000000, 0x00000000, 0x00000000,
 		0x00000000, 0x00000000
@@ -210,69 +203,23 @@ static eccp_curve_t secp192k1_curve_dat = {
 #endif /* MBEDTLS_ECP_DP_SECP192K1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
-
-#if CONFIG_SOC_RISCV_TELINK_B91
-#define MONT_P_BITLEN       mont_p_bitLen
-#define MONT_P              mont_p
-#define MONT_P_H            mont_p_h
-#define MONT_P_N1           mont_p_n1
-#define MONT_A24            mont_a24
-#elif CONFIG_SOC_RISCV_TELINK_B92
-#define MONT_P_BITLEN       p_bitLen
-#define MONT_P              p
-#define MONT_P_H            p_h
-#define MONT_P_N1           p_n1
-#define MONT_A24            a24
-#elif CONFIG_SOC_RISCV_TELINK_B95
-/* dummy function to compile */
-inline static uint8_t pke_x25519_point_mul(mont_curve_t *curve,
-	uint32_t *k, uint32_t *Pu, uint32_t *Qu)
-{
-	(void) curve;
-	(void) k;
-	(void) Pu;
-	(void) Qu;
-
-	return PKE_INVALID_INPUT;
-}
-#endif
-
-#if CONFIG_SOC_RISCV_TELINK_B91
 static mont_curve_t x25519 = {
-	.mont_p_bitLen = 255,
-	.mont_p = (unsigned int[]){
+	.p_bitLen = 255,
+	.n_bitLen = 253,
+	.p = (unsigned int[]){
 		0xffffffed, 0xffffffff, 0xffffffff, 0xffffffff,
 		0xffffffff, 0xffffffff, 0xffffffff, 0x7fffffff
 	},
-	.mont_p_h = (unsigned int[]){
+	.p_h = (unsigned int[]){
 		0x000005a4, 0x00000000, 0x00000000, 0x00000000,
 		0x00000000, 0x00000000, 0x00000000, 0x00000000
 	},
-	.mont_p_n1 = (unsigned int[]){0x286bca1b},
-	.mont_a24 = (unsigned int[]){
-		0x0001db41, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000
-	}
-};
-#elif CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_B95
-static mont_curve_t x25519 = {
-	.MONT_P_BITLEN = 255,
-	.MONT_P = (unsigned int[]){
-		0xffffffed, 0xffffffff, 0xffffffff, 0xffffffff,
-		0xffffffff, 0xffffffff, 0xffffffff, 0x7fffffff
-	},
-	.MONT_P_H = (unsigned int[]){
-		0x000005a4, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000
-	},
-	.p_n1 = (unsigned int[]){0x286bca1b},
+	.p_n0 = (unsigned int[]){0x286bca1b},
 	.a24 = (unsigned int[]){
 		0x0001db41, 0x00000000, 0x00000000, 0x00000000,
 		0x00000000, 0x00000000, 0x00000000, 0x00000000
 	}
 };
-#endif
-
 #endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
 
 /****************************************************************
@@ -314,9 +261,7 @@ static const struct {
 	mont_curve_t *curve_dat;
 } mont_curve_linking[] = {
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	{.group = MBEDTLS_ECP_DP_CURVE25519, .curve_dat = &x25519}
-#endif /* CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 */
 #endif /* MBEDTLS_ECP_DP_CURVE25519_ENABLED */
 };
 #endif /* MBEDTLS_ECP_MONTGOMERY_ENABLED */
@@ -361,10 +306,10 @@ static mont_curve_t *mont_curve_get(const mbedtls_ecp_group *grp)
  * Public functions declaration
  ****************************************************************/
 
-extern void telink_b9x_ecp_lock(void);
-extern void telink_b9x_ecp_unlock(void);
+extern void telink_soc_ecp_lock(void);
+extern void telink_soc_ecp_unlock(void);
 
-int telink_b9x_ecp_check_pubkey(const mbedtls_ecp_group *grp,
+int telink_tlx_ecp_check_pubkey(const mbedtls_ecp_group *grp,
 	const mbedtls_ecp_point *pt)
 {
 	int result = MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
@@ -392,10 +337,10 @@ int telink_b9x_ecp_check_pubkey(const mbedtls_ecp_group *grp,
 				(unsigned char *)Qx, sizeof(Qx));
 			(void) mbedtls_mpi_write_binary_le(&pt->MBEDTLS_PRIVATE(Y),
 				(unsigned char *)Qy, sizeof(Qy));
-			telink_b9x_ecp_lock();
+			telink_soc_ecp_lock();
 			int r = pke_eccp_point_verify(eccp_curve, Qx, Qy);
 
-			telink_b9x_ecp_unlock();
+			telink_soc_ecp_unlock();
 			if (r == PKE_SUCCESS) {
 				result = 0;
 			} else if (r == PKE_NOT_ON_CURVE) {
@@ -411,7 +356,7 @@ int telink_b9x_ecp_check_pubkey(const mbedtls_ecp_group *grp,
 	return result;
 }
 
-int telink_b9x_ecp_mul_restartable(mbedtls_ecp_group *grp,
+int telink_tlx_ecp_mul_restartable(mbedtls_ecp_group *grp,
 	mbedtls_ecp_point *R, const mbedtls_mpi *m, const mbedtls_ecp_point *P,
 	int (*f_rng)(void *, unsigned char *, size_t),
 	void *p_rng, mbedtls_ecp_restart_ctx *rs_ctx)
@@ -448,10 +393,10 @@ int telink_b9x_ecp_mul_restartable(mbedtls_ecp_group *grp,
 				memset(Qy, 0, sizeof(Qy));
 				break;
 			}
-			telink_b9x_ecp_lock();
+			telink_soc_ecp_lock();
 			int r = pke_eccp_point_mul(eccp_curve, ms, Qx, Qy, Qx, Qy);
 
-			telink_b9x_ecp_unlock();
+			telink_soc_ecp_unlock();
 			if (r != PKE_SUCCESS) {
 				memset(ms, 0, sizeof(ms));
 				memset(Qx, 0, sizeof(Qx));
@@ -461,44 +406,24 @@ int telink_b9x_ecp_mul_restartable(mbedtls_ecp_group *grp,
 		}
 #endif /* MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED */
 #if defined(MBEDTLS_ECP_MONTGOMERY_ENABLED)
-			if (mbedtls_ecp_get_type(grp) ==
-				MBEDTLS_ECP_TYPE_MONTGOMERY) {
+		if (mbedtls_ecp_get_type(grp) == MBEDTLS_ECP_TYPE_MONTGOMERY) {
+			mont_curve_t *mont_curve = mont_curve_get(grp);
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-				mont_curve_t *mont_curve = mont_curve_get(grp);
-
-				if (mont_curve != NULL) {
-					(void)mbedtls_mpi_write_binary_le(m,
-						(unsigned char *)ms,
-						sizeof(ms));
-					(void)mbedtls_mpi_write_binary_le(&P->X,
-						(unsigned char *)Qx,
-						sizeof(Qx));
-
-					result =
-					MBEDTLS_ERR_PLATFORM_HW_ACCEL_FAILED;
-
-					mbedtls_ecp_lock();
-					if (pke_x25519_point_mul(mont_curve,
-						ms, Qx, Qx) ==
-					    PKE_SUCCESS) {
-						(void)
-						mbedtls_mpi_read_binary_le(
-							&R->X,
-							(const unsigned char *)
-							Qx,
-							sizeof(Qx));
-						(void)mbedtls_mpi_lset(
-							&R->Y, 0);
-						(void)mbedtls_mpi_lset(
-							&R->Z, 1);
-						result = 0;
-					}
-					mbedtls_ecp_unlock();
-				}
-#elif CONFIG_SOC_RISCV_TELINK_B95
-				result = ecp_mul_mxz( grp, R, m, P, f_rng, p_rng );
-#endif
+			if (!mont_curve) {
+				memset(ms, 0, sizeof(ms));
+				memset(Qx, 0, sizeof(Qx));
+				memset(Qy, 0, sizeof(Qy));
+				break;
+			}
+			telink_soc_ecp_lock();
+			int r = pke_x25519_point_mul(mont_curve, ms, Qx, Qx);
+			telink_soc_ecp_unlock();
+			if (r != PKE_SUCCESS) {
+				LOG_ERR("EC multiplication error");
+				memset(ms, 0, sizeof(ms));
+				memset(Qx, 0, sizeof(Qx));
+				memset(Qy, 0, sizeof(Qy));
+				break;
 			}
 			memset(Qy, 0, sizeof(Qy));
 		}
@@ -516,7 +441,7 @@ int telink_b9x_ecp_mul_restartable(mbedtls_ecp_group *grp,
 	return result;
 }
 
-int telink_b9x_ecp_muladd_restartable(mbedtls_ecp_group *grp,
+int telink_tlx_ecp_muladd_restartable(mbedtls_ecp_group *grp,
 	mbedtls_ecp_point *R,
 	const mbedtls_mpi *m, const mbedtls_ecp_point *P,
 	const mbedtls_mpi *n, const mbedtls_ecp_point *Q,
@@ -555,9 +480,9 @@ int telink_b9x_ecp_muladd_restartable(mbedtls_ecp_group *grp,
 				(unsigned char *)Q2y, sizeof(Q2y));
 
 			(void) mbedtls_mpi_write_binary_le(m, (unsigned char *)ms, sizeof(ms));
-			telink_b9x_ecp_lock();
+			telink_soc_ecp_lock();
 			r = pke_eccp_point_mul(eccp_curve, ms, Q1x, Q1y, Q1x, Q1y);
-			telink_b9x_ecp_unlock();
+			telink_soc_ecp_unlock();
 			if (r != PKE_SUCCESS) {
 				LOG_ERR("EC multiplication error");
 				memset(ms, 0, sizeof(ms));
@@ -568,9 +493,9 @@ int telink_b9x_ecp_muladd_restartable(mbedtls_ecp_group *grp,
 				break;
 			}
 			(void) mbedtls_mpi_write_binary_le(n, (unsigned char *)ms, sizeof(ms));
-			telink_b9x_ecp_lock();
+			telink_soc_ecp_lock();
 			r = pke_eccp_point_mul(eccp_curve, ms, Q2x, Q2y, Q2x, Q2y);
-			telink_b9x_ecp_unlock();
+			telink_soc_ecp_unlock();
 			if (r != PKE_SUCCESS) {
 				LOG_ERR("EC multiplication error");
 				memset(ms, 0, sizeof(ms));
@@ -580,9 +505,9 @@ int telink_b9x_ecp_muladd_restartable(mbedtls_ecp_group *grp,
 				memset(Q2y, 0, sizeof(Q2y));
 				break;
 			}
-			telink_b9x_ecp_lock();
+			telink_soc_ecp_lock();
 			r = pke_eccp_point_add(eccp_curve, Q1x, Q1y, Q2x, Q2y, Q1x, Q1y);
-			telink_b9x_ecp_unlock();
+			telink_soc_ecp_unlock();
 			if (r != PKE_SUCCESS) {
 				LOG_ERR("EC summation error");
 				memset(ms, 0, sizeof(ms));

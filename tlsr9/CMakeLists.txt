@@ -51,12 +51,6 @@ endif()
 if(CONFIG_MBEDTLS)
 	add_subdirectory( crypto/mbedtls )
 endif() # MbedTLS HW acceleration
-if(CONFIG_MBEDTLS AND CONFIG_TELINK_TLX_MBEDTLS_HW_ACCELERATION)
-	add_subdirectory( crypto/mbedtls )
-	zephyr_library_sources(
-		drivers/${SOC}/aes.c
-	)
-endif() # MbedTLS HW acceleration
 
 # Flash driver reference sources
 if(CONFIG_SOC_FLASH_TELINK_B9X OR CONFIG_USB_TELINK_B9X)
