@@ -1,9 +1,8 @@
 # Copyright (c) 2022 Telink Semiconductor
 # SPDX-License-Identifier: Apache-2.0
 
-if (BT_B9X || BT_TLX)
-
 menu "B9X BLE Controller"
+	depends on BT_B9X # Only show B9X menu if BT_B9X is enabled
 
 choice B9X_BLE_CTRL_MAC_TYPE
 	prompt "MAC address type"
@@ -144,4 +143,144 @@ config B9X_BLE_CTRL_THREAD_PERIOD_MS
 
 endmenu
 
-endif # (BT_B9X || BT_TLX)
+menu "TLX BLE Controller"
+	depends on BT_TLX # Only show TLX menu if BT_TLX is enabled
+
+choice TLX_BLE_CTRL_MAC_TYPE
+	prompt "MAC address type"
+	default TLX_BLE_CTRL_MAC_TYPE_PUBLIC
+config TLX_BLE_CTRL_MAC_TYPE_PUBLIC
+	bool "Public"
+config TLX_BLE_CTRL_MAC_TYPE_RANDOM_STATIC
+	bool "Random static"
+endchoice
+
+config TLX_BLE_PUBLIC_MAC_ADDR
+	depends on TLX_BLE_CTRL_MAC_TYPE_PUBLIC
+	string "Default Development Public BLE Address"
+	default "00:11:22:38:c1:a4"
+	help
+	  Development Public BLE Address
+
+config TLX_BLE_CTRL_MAC_FLASH
+	depends on TLX_BLE_CTRL_MAC_TYPE_RANDOM_STATIC
+	bool "Store static BLE MAC address in flash"
+	default n
+	help
+	  Store once generated static BLE MAC address in flash
+
+config TLX_BLE_CTRL_CONNECTION_INTERVAL_IDX
+	int "Connection interval, idx (time = idx * 1.25 ms)"
+	default 10
+	range 1 255
+	help
+	  ACL master connection interval index (time = index * 1.25 ms).
+
+config TLX_BLE_CTRL_CONNECTION_TIMEOUT_MS
+	int "Connection timeout, ms"
+	default 4000
+	help
+	  ACL connection timeout, ms.
+
+config TLX_BLE_CTRL_RF_POWER
+	int "Tx power, dbm"
+	default 3
+	range -30 9
+	help
+	  BLE TX power
+
+config TLX_BLE_CTRL_MASTER_MAX_NUM
+	int "Maximum number of master connections"
+	default 2
+	range 0 4
+	help
+	  Number of master ACL connections supported.
+
+config TLX_BLE_CTRL_SLAVE_MAX_NUM
+	int "Maximum number of slave connections"
+	default 2
+	range 0 4
+	help
+	  Number of slave ACL connections supported.
+
+config TLX_BLE_CTRL_EXT_ADV
+	bool "Enable extended advertising"
+	default y if BT_EXT_ADV
+	help
+	  Enable extended advertising.
+
+if TLX_BLE_CTRL_EXT_ADV
+
+config TLX_BLE_CTRL_EXT_ADV_SETS_NUM
+	int "Number of supported extended advertising sets"
+	default 3
+	help
+	  Number of supported extended advertising sets.
+
+config TLX_BLE_CTRL_EXT_ADV_DATA_LEN_MAX
+	int "Maximum extended advertising data length"
+	default 320
+	help
+	  Maximum extended advertising data length.
+
+config TLX_BLE_CTRL_EXT_ADV_SCAN_DATA_LEN_MAX
+	int "Maximum extended scan response data length"
+	default 320
+	help
+	  Maximum extended scan response data length.
+
+endif # TLX_BLE_CTRL_EXT_ADV
+
+config TLX_BLE_CTRL_EXT_SCAN
+	bool "Enable extended scanning"
+	default y if BT_EXT_ADV
+	help
+	  Enable extended scanning.
+
+config TLX_BLE_CTRL_PER_ADV
+	bool "Enable periodic advertising"
+	default y if BT_PER_ADV
+	help
+	  Enable periodic advertising.
+
+if TLX_BLE_CTRL_PER_ADV
+
+config TLX_BLE_CTRL_PER_ADV_SETS_NUM
+	int "Number of supported periodic advertising sets"
+	default 2
+	help
+	  Number of supported periodic advertising sets.
+
+config TLX_BLE_CTRL_PER_ADV_DATA_LEN_MAX
+	int "Maximum periodic advertising data length"
+	default 512
+	help
+	  Maximum periodic advertising data length.
+
+endif # TLX_BLE_CTRL_PER_ADV
+
+config TLX_BLE_CTRL_PER_ADV_SYNC
+	bool "Enable periodic advertising sync"
+	default y if BT_PER_ADV_SYNC
+	help
+	  Enable periodic advertising sync.
+
+config TLX_BLE_CTRL_THREAD_STACK_SIZE
+	int "Controller thread stack size"
+	default 2048
+	help
+	  TLX BLE Controller thread stack size.
+
+config TLX_BLE_CTRL_THREAD_PRIORITY
+	int "Controller thread priority"
+	default 2
+	help
+	  TLX BLE Controller thread priority.
+
+config TLX_BLE_CTRL_THREAD_PERIOD_MS
+	int "Controller thread period, ms"
+	default 10
+	help
+	  TLX BLE Controller thread period in ms.
+
+endmenu

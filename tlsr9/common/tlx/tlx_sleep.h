@@ -15,18 +15,16 @@
  * limitations under the License.
  *
  *****************************************************************************/
-#ifndef TLX_BT_FLASH_H_
-#define TLX_BT_FLASH_H_
 
-#include "stdint.h"
-#include "compiler.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-/* SOC Calibration Address Offset */
-#define TLX_CALIBRATION_ADDR_OFFSET 0x0000
+#ifndef __TLX_SLEEP_H
+#define __TLX_SLEEP_H
 
-/* SOC BT MAC Address Offset */
-#define TLX_BT_MAC_ADDR_OFFSET 0x1000
+bool tlx_suspend(uint32_t wake_stimer_tick);
+#if CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
+bool tlx_deep_sleep(uint32_t wake_stimer_tick);
+#endif /* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION */
 
-_attribute_no_inline_ int tlx_bt_blc_mac_init(unsigned char *bt_mac);
-
-#endif
+#endif /* __TLX_SLEEP_H */

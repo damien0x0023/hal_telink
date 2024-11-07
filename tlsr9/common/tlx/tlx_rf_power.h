@@ -15,18 +15,20 @@
  * limitations under the License.
  *
  *****************************************************************************/
-#ifndef TLX_BT_FLASH_H_
-#define TLX_BT_FLASH_H_
+
+#ifndef TLX_RF_POWER_H_
+#define TLX_RF_POWER_H_
 
 #include "stdint.h"
-#include "compiler.h"
 
-/* SOC Calibration Address Offset */
-#define TLX_CALIBRATION_ADDR_OFFSET 0x0000
-
-/* SOC BT MAC Address Offset */
-#define TLX_BT_MAC_ADDR_OFFSET 0x1000
-
-_attribute_no_inline_ int tlx_bt_blc_mac_init(unsigned char *bt_mac);
-
+#if CONFIG_SOC_RISCV_TELINK_TL321X
+#define TLX_TX_POWER_MIN                    (-19)
+#define TLX_TX_POWER_MAX                    (31)
+#else
+#define TLX_TX_POWER_MIN                    (-30)
+#define TLX_TX_POWER_MAX                    (9)
 #endif
+
+extern const uint8_t tlx_tx_pwr_lt[];  
+
+#endif /* TLX_RF_POWER_H_ */

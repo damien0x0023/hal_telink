@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2023-2024 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * Copyright (c) 2023 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,15 +23,7 @@
 
 #define B9X_TX_POWER_MIN                    (-30)
 #define B9X_TX_POWER_MAX                    (9)
-#define TLX_TX_POWER_MIN                    (-19)
-#define TLX_TX_POWER_MAX                    (31)
 
 extern const uint8_t b9x_tx_pwr_lt[];
-extern const uint8_t tlx_tx_pwr_lt[];  
-
-/* compatible with b9x and tlx :TODO: remove this after tlx support */
-#if CONFIG_SOC_RISCV_TELINK_TL321X
-#define b9x_tx_pwr_lt   tlx_tx_pwr_lt
-#endif
 
 #endif /* B9X_BT_RF_POWER_H_ */

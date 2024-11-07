@@ -26,12 +26,12 @@
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/drivers/flash.h>
 
-#if CONFIG_B9X_BLE_CTRL_MAC_TYPE_PUBLIC || CONFIG_B9X_BLE_CTRL_MAC_FLASH
+#if CONFIG_TLX_BLE_CTRL_MAC_TYPE_PUBLIC || CONFIG_TLX_BLE_CTRL_MAC_FLASH
 static const struct device *flash_device =
 	DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 #endif
 
-#if CONFIG_B9X_BLE_CTRL_MAC_TYPE_PUBLIC
+#if CONFIG_TLX_BLE_CTRL_MAC_TYPE_PUBLIC
 static int get_bytes_from_str(uint8_t *buf, int buf_len, const char *src)
 {
 	unsigned int i;
@@ -66,14 +66,14 @@ static int get_bytes_from_str(uint8_t *buf, int buf_len, const char *src)
  * @param[in]	bt_mac - BT MAC address
  * @return      Status - 0: command succeeded
  */
-_attribute_no_inline_ int b9x_bt_blc_mac_init(uint8_t *bt_mac)
+_attribute_no_inline_ int tlx_bt_blc_mac_init(uint8_t *bt_mac)
 {
 	int err = 0;
-#if CONFIG_B9X_BLE_CTRL_MAC_TYPE_PUBLIC
+#if CONFIG_TLX_BLE_CTRL_MAC_TYPE_PUBLIC
 	uint8_t dummy_mac[BLE_ADDR_LEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 	err = flash_read(flash_device, FIXED_PARTITION_OFFSET(vendor_partition)
-			+ B9X_BT_MAC_ADDR_OFFSET, bt_mac, BLE_ADDR_LEN);
+			+ TLX_BT_MAC_ADDR_OFFSET, bt_mac, BLE_ADDR_LEN);
 	if (err < 0)
 		return err;
 
@@ -81,16 +81,16 @@ _attribute_no_inline_ int b9x_bt_blc_mac_init(uint8_t *bt_mac)
 		return 0;
 
 	err = get_bytes_from_str(bt_mac, BLE_ADDR_LEN,
-			CONFIG_B9X_BLE_PUBLIC_MAC_ADDR);
+			CONFIG_TLX_BLE_PUBLIC_MAC_ADDR);
 	if (err)
 		return err;
 
-#elif CONFIG_B9X_BLE_CTRL_MAC_TYPE_RANDOM_STATIC
-#if CONFIG_B9X_BLE_CTRL_MAC_FLASH
+#elif CONFIG_TLX_BLE_CTRL_MAC_TYPE_RANDOM_STATIC
+#if CONFIG_TLX_BLE_CTRL_MAC_FLASH
 	uint8_t temp_mac[BLE_ADDR_LEN + 3];
 
 	err = flash_read(flash_device, FIXED_PARTITION_OFFSET(vendor_partition)
-			+ B9X_BT_MAC_ADDR_OFFSET, temp_mac, BLE_ADDR_LEN + 3);
+			+ TLX_BT_MAC_ADDR_OFFSET, temp_mac, BLE_ADDR_LEN + 3);
 	if (err < 0)
 		return err;
 
@@ -106,7 +106,7 @@ _attribute_no_inline_ int b9x_bt_blc_mac_init(uint8_t *bt_mac)
 	memcpy(temp_mac, bt_mac, BLE_ADDR_LEN);
 	temp_mac[8] = 0;
 	err = flash_write(flash_device, FIXED_PARTITION_OFFSET(vendor_partition)
-			+ B9X_BT_MAC_ADDR_OFFSET, temp_mac, BLE_ADDR_LEN + 3);
+			+ TLX_BT_MAC_ADDR_OFFSET, temp_mac, BLE_ADDR_LEN + 3);
 #else
 	generateRandomNum(BLE_ADDR_LEN, bt_mac);
 	/* The random static address will be generated on every reboot */

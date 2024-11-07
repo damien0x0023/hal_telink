@@ -22,11 +22,11 @@
 #define INIT_FAILED       (-1)
 
 /**
- * @brief       Telink B9X BLE Controller initialization
+ * @brief       Telink TLX BLE Controller initialization
  * @param[in]   prx - HCI RX callback
  * @param[in]   ptx -HCI TX callback
  * @return      Status - 0: command succeeded; -1: command failed
  */
-int b9x_bt_blc_init(void *prx, void *ptx);
+int tlx_bt_blc_init(void *prx, void *ptx);
 
 #endif /* TLX_BT_INIIT_H_ */

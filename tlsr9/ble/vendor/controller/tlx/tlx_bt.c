@@ -36,8 +36,8 @@
 #endif
 
 /* Module defines */
-#define BLE_THREAD_STACK_SIZE CONFIG_B9X_BLE_CTRL_THREAD_STACK_SIZE
-#define BLE_THREAD_PRIORITY CONFIG_B9X_BLE_CTRL_THREAD_PRIORITY
+#define BLE_THREAD_STACK_SIZE CONFIG_TLX_BLE_CTRL_THREAD_STACK_SIZE
+#define BLE_THREAD_PRIORITY CONFIG_TLX_BLE_CTRL_THREAD_PRIORITY
 #define BLE_CONTROLLER_SEMAPHORE_MAX 50
 
 #define BYTES_TO_UINT16(n, p)                                                                      \
@@ -50,10 +50,10 @@
 		p += 2;                                                                            \
 	}
 
-static volatile enum b9x_bt_controller_state b9x_bt_state = B9X_BT_CONTROLLER_STATE_STOPPED;
-static void b9x_bt_controller_thread();
-K_THREAD_STACK_DEFINE(b9x_bt_controller_thread_stack, BLE_THREAD_STACK_SIZE);
-static struct k_thread b9x_bt_controller_thread_data;
+static volatile enum tlx_bt_controller_state tlx_bt_state = TLX_BT_CONTROLLER_STATE_STOPPED;
+static void tlx_bt_controller_thread();
+K_THREAD_STACK_DEFINE(tlx_bt_controller_thread_stack, BLE_THREAD_STACK_SIZE);
+static struct k_thread tlx_bt_controller_thread_data;
 
 /**
  * @brief    Semaphore define for controller.
@@ -68,9 +68,9 @@ _attribute_ram_code_ void os_give_sem_cb(void)
 	k_sem_give(&controller_sem);
 }
 
-static struct b9x_ctrl_t {
-	b9x_bt_host_callback_t callbacks;
-} b9x_ctrl;
+static struct tlx_ctrl_t {
+	tlx_bt_host_callback_t callbacks;
+} tlx_ctrl;
 
 /**
  * @brief    RF driver interrupt handler
@@ -95,7 +95,7 @@ _attribute_ram_code_ void stimer_irq_handler(const void *param)
 /**
  * @brief    BLE Controller HCI Tx callback implementation
  */
-static int b9x_bt_hci_tx_handler(void)
+static int tlx_bt_hci_tx_handler(void)
 {
 	/* check for data available */
 	while(bltHci_txfifo.wptr != bltHci_txfifo.rptr)
@@ -107,17 +107,17 @@ static int b9x_bt_hci_tx_handler(void)
 			BSTREAM_TO_UINT16(len, p);
 			bltHci_txfifo.rptr++;
 
-			if (b9x_bt_state == B9X_BT_CONTROLLER_STATE_ACTIVE) {
+			if (tlx_bt_state == TLX_BT_CONTROLLER_STATE_ACTIVE) {
 				/* Send data to the host */
-				if (b9x_ctrl.callbacks.host_read_packet) {
-					b9x_ctrl.callbacks.host_read_packet(p, len);
+				if (tlx_ctrl.callbacks.host_read_packet) {
+					tlx_ctrl.callbacks.host_read_packet(p, len);
 				}
-			} else if (b9x_bt_state == B9X_BT_CONTROLLER_STATE_STOPPING) {
+			} else if (tlx_bt_state == TLX_BT_CONTROLLER_STATE_STOPPING) {
 				/* In this state HCI reset is sent - waiting for command complete */
 				static const uint8_t hci_reset_cmd_complette[] = {0x04, 0x0e, 0x04, 0x01, 0x03, 0x0c, 0x00};
 
 				if (len == sizeof(hci_reset_cmd_complette) && !memcmp(p, hci_reset_cmd_complette, len)) {
-					b9x_bt_state = B9X_BT_CONTROLLER_STATE_STOPPED;
+					tlx_bt_state = TLX_BT_CONTROLLER_STATE_STOPPED;
 					k_sem_give(&controller_sem);
 				}
 			}
@@ -130,13 +130,13 @@ static int b9x_bt_hci_tx_handler(void)
 /**
  * @brief    BLE Controller HCI Rx callback implementation
  */
-static int b9x_bt_hci_rx_handler(void)
+static int tlx_bt_hci_rx_handler(void)
 {
 	/* Check for data available */
 	if (bltHci_rxfifo.wptr == bltHci_rxfifo.rptr) {
 		/* No data to process, send host_send_available message to the host */
-		if (b9x_ctrl.callbacks.host_send_available) {
-			b9x_ctrl.callbacks.host_send_available();
+		if (tlx_ctrl.callbacks.host_send_available) {
+			tlx_ctrl.callbacks.host_send_available();
 		}
 
 		return 0;
@@ -159,12 +159,12 @@ static int b9x_bt_hci_rx_handler(void)
 }
 
 /**
- * @brief    Telink B9X BLE Controller thread
+ * @brief    Telink TLX BLE Controller thread
  */
-static void b9x_bt_controller_thread()
+static void tlx_bt_controller_thread()
 {
-	while (b9x_bt_state == B9X_BT_CONTROLLER_STATE_ACTIVE ||
-		b9x_bt_state == B9X_BT_CONTROLLER_STATE_STOPPING) {
+	while (tlx_bt_state == TLX_BT_CONTROLLER_STATE_ACTIVE ||
+		tlx_bt_state == TLX_BT_CONTROLLER_STATE_STOPPING) {
 		k_sem_take(&controller_sem, K_FOREVER);
 		blc_sdk_main_loop();
 	}
@@ -173,7 +173,7 @@ static void b9x_bt_controller_thread()
 /**
  * @brief    BLE Controller IRQs initialization
  */
-static void b9x_bt_irq_init()
+static void tlx_bt_irq_init()
 {
 #if CONFIG_SOC_RISCV_TELINK_TL321X
 	plic_preempt_feature_dis();
@@ -193,18 +193,16 @@ static void b9x_bt_irq_init()
 }
 
 /**
- * @brief    Telink B9X BLE Controller initialization
+ * @brief    Telink TLX BLE Controller initialization
  * @return   Status - 0: command succeeded; -1: command failed
  */
-int b9x_bt_controller_init()
+int tlx_bt_controller_init()
 {
 	int status;
 
-#if CONFIG_PM && (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \
-CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
+#if CONFIG_PM && CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
 	pm_policy_state_lock_get(PM_STATE_STANDBY, PM_ALL_SUBSTATES);
-#endif /* CONFIG_PM && (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \ */
-/* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION) */
+#endif /* CONFIG_PM && CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION */
 
 	/* Reset Radio */
 	rf_radio_reset();
@@ -213,11 +211,11 @@ CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
 	rf_drv_ble_init();
 
 #ifdef CONFIG_BT_CENTRAL
-	app_acl_mstTxfifo = (u8 *)calloc(ACL_MASTER_TX_FIFO_SIZE * ACL_MASTER_TX_FIFO_NUM * CONFIG_B9X_BLE_CTRL_MASTER_MAX_NUM,1);
+	app_acl_mstTxfifo = (u8 *)calloc(ACL_MASTER_TX_FIFO_SIZE * ACL_MASTER_TX_FIFO_NUM * CONFIG_TLX_BLE_CTRL_MASTER_MAX_NUM,1);
 #endif /* CONFIG_BT_CENTRAL */
 
 #ifdef CONFIG_BT_PERIPHERAL
-	app_acl_slvTxfifo = (u8 *)calloc(ACL_SLAVE_TX_FIFO_SIZE * ACL_SLAVE_TX_FIFO_NUM * CONFIG_B9X_BLE_CTRL_SLAVE_MAX_NUM,1);
+	app_acl_slvTxfifo = (u8 *)calloc(ACL_SLAVE_TX_FIFO_SIZE * ACL_SLAVE_TX_FIFO_NUM * CONFIG_TLX_BLE_CTRL_SLAVE_MAX_NUM,1);
 #endif /* CONFIG_BT_PERIPHERAL */
 	
 	app_acl_rxfifo = (u8 *)calloc(ACL_RX_FIFO_SIZE * ACL_RX_FIFO_NUM,1);
@@ -226,13 +224,13 @@ CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
 	app_hci_rxAclfifo = (u8 *)calloc(HCI_RX_ACL_FIFO_SIZE * HCI_RX_ACL_FIFO_NUM,1);
 
 	/* Init BLE Controller stack */
-	status = b9x_bt_blc_init(b9x_bt_hci_rx_handler, b9x_bt_hci_tx_handler);
+	status = tlx_bt_blc_init(tlx_bt_hci_rx_handler, tlx_bt_hci_tx_handler);
 	if (status != INIT_OK) {
 		return status;
 	}
 
 	/* Init IRQs */
-	b9x_bt_irq_init();
+	tlx_bt_irq_init();
 
 	/* Register callback to controller. */
 #if CONFIG_SOC_RISCV_TELINK_TL321X
@@ -244,34 +242,34 @@ CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
 	k_sem_give(&controller_sem);
 
 	/* Create BLE main thread */
-	(void)k_thread_create(&b9x_bt_controller_thread_data,
-		b9x_bt_controller_thread_stack, K_THREAD_STACK_SIZEOF(b9x_bt_controller_thread_stack),
-		b9x_bt_controller_thread, NULL, NULL, NULL, BLE_THREAD_PRIORITY, 0, K_NO_WAIT);
+	(void)k_thread_create(&tlx_bt_controller_thread_data,
+		tlx_bt_controller_thread_stack, K_THREAD_STACK_SIZEOF(tlx_bt_controller_thread_stack),
+		tlx_bt_controller_thread, NULL, NULL, NULL, BLE_THREAD_PRIORITY, 0, K_NO_WAIT);
 #if CONFIG_SOC_RISCV_TELINK_TL321X
-		(void)k_thread_name_set(&b9x_bt_controller_thread_data, "TL321X_BT");
+		(void)k_thread_name_set(&tlx_bt_controller_thread_data, "TL321X_BT");
 #endif
 
 	/* Start thread */
-	b9x_bt_state = B9X_BT_CONTROLLER_STATE_ACTIVE;
-	k_thread_start(&b9x_bt_controller_thread_data);
+	tlx_bt_state = TLX_BT_CONTROLLER_STATE_ACTIVE;
+	k_thread_start(&tlx_bt_controller_thread_data);
 
 	return status;
 }
 
 /**
- * @brief    Telink B9X BLE Controller deinitialization
+ * @brief    Telink TLX BLE Controller deinitialization
  */
-void b9x_bt_controller_deinit()
+void tlx_bt_controller_deinit()
 {
 	/* start BLE stopping procedure */
-	b9x_bt_state = B9X_BT_CONTROLLER_STATE_STOPPING;
+	tlx_bt_state = TLX_BT_CONTROLLER_STATE_STOPPING;
 
 	/* reset controller */
 	static const uint8_t hci_reset_cmd[] = {0x03, 0x0c, 0x00};
-	b9x_bt_host_send_packet(0x01, hci_reset_cmd, sizeof(hci_reset_cmd));
+	tlx_bt_host_send_packet(0x01, hci_reset_cmd, sizeof(hci_reset_cmd));
 
 	/* wait thread finish */
-	(void)k_thread_join(&b9x_bt_controller_thread_data, K_FOREVER);
+	(void)k_thread_join(&tlx_bt_controller_thread_data, K_FOREVER);
 
 	/* disable interrupts */
 	plic_interrupt_disable(IRQ_SYSTIMER);
@@ -292,11 +290,9 @@ void b9x_bt_controller_deinit()
 	free(app_hci_rxAclfifo);
 
 
-#if CONFIG_PM && (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \
-CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
+#if CONFIG_PM && CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
 	pm_policy_state_lock_put(PM_STATE_STANDBY, PM_ALL_SUBSTATES);
-#endif /* CONFIG_PM && (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \ */
-/* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION) */
+#endif /* CONFIG_PM && CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION */
 }
 
 /**
@@ -304,9 +300,9 @@ CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
  * @param      data the packet point
  * @param      len the packet length
  */
-void b9x_bt_host_send_packet(uint8_t type, const uint8_t *data, uint16_t len)
+void tlx_bt_host_send_packet(uint8_t type, const uint8_t *data, uint16_t len)
 {
-	if (b9x_bt_state == B9X_BT_CONTROLLER_STATE_STOPPED) {
+	if (tlx_bt_state == TLX_BT_CONTROLLER_STATE_STOPPED) {
 		return;
 	}
 
@@ -321,16 +317,16 @@ void b9x_bt_host_send_packet(uint8_t type, const uint8_t *data, uint16_t len)
 /**
  * @brief Register the vhci reference callback
  */
-void b9x_bt_host_callback_register(const b9x_bt_host_callback_t *pcb)
+void tlx_bt_host_callback_register(const tlx_bt_host_callback_t *pcb)
 {
-	b9x_ctrl.callbacks.host_read_packet = pcb->host_read_packet;
-	b9x_ctrl.callbacks.host_send_available = pcb->host_send_available;
+	tlx_ctrl.callbacks.host_read_packet = pcb->host_read_packet;
+	tlx_ctrl.callbacks.host_send_available = pcb->host_send_available;
 }
 
 /**
- * @brief     Get state of Telink B9X BLE Controller
+ * @brief     Get state of Telink TLX BLE Controller
  */
-enum b9x_bt_controller_state b9x_bt_controller_state(void) {
+enum tlx_bt_controller_state tlx_bt_controller_state(void) {
 
-	return b9x_bt_state;
+	return tlx_bt_state;
 }

@@ -6,12 +6,16 @@
 
 if (CONFIG_SOC_RISCV_TELINK_B91)
 	set(SOC "B91")
+	set(SOC_FAMILY "b9x")
 elseif (CONFIG_SOC_RISCV_TELINK_B92)
 	set(SOC "B92")
+	set(SOC_FAMILY "b9x")
 elseif (CONFIG_SOC_RISCV_TELINK_B95)
 	set(SOC "B95")
+	set(SOC_FAMILY "b9x")
 elseif (CONFIG_SOC_RISCV_TELINK_TL321X)
 	set(SOC "TL321X")
+	set(SOC_FAMILY "tlx")
 else()
 	message( FATAL_ERROR "Not supported SOC" )
 endif()
@@ -22,6 +26,7 @@ zephyr_library()
 zephyr_include_directories(common)
 zephyr_include_directories(drivers/${SOC}/compatibility_pack)
 zephyr_include_directories(drivers/${SOC}/reg_include)
+
 # add for B95 headers
 zephyr_include_directories(drivers/${SOC}/lib/include)
 zephyr_include_directories(drivers/${SOC}/lib/include/rf)
@@ -30,21 +35,20 @@ zephyr_include_directories(drivers/${SOC}/lib/include/pke)
 zephyr_include_directories(drivers/${SOC}/lib/include/trng)
 zephyr_include_directories(drivers/${SOC})
 
-# add for B92 headers
+# add for TL321X or B92 headers
 zephyr_include_directories(drivers/${SOC}/ext_driver)
-if (NOT CONFIG_SOC_RISCV_TELINK_TL321X)
-zephyr_include_directories(drivers/${SOC}/ext_driver/driver_lib)
+if (CONFIG_SOC_RISCV_TELINK_TL321X)
+	zephyr_include_directories(drivers/${SOC}/ext_driver/driver_internal)
 else()
-zephyr_include_directories(drivers/${SOC}/ext_driver/driver_internal)
+	zephyr_include_directories(drivers/${SOC}/ext_driver/driver_lib)
 endif()
 zephyr_include_directories(drivers/${SOC}/ext_peripherals/codec_0581)
 zephyr_include_directories(drivers/${SOC}/flash)
 
-# soc.c reference sources
+# soc.c reference sources for B9X
 if (NOT CONFIG_SOC_RISCV_TELINK_TL321X)
 zephyr_library_sources(drivers/${SOC}/clock.c)
 zephyr_library_sources(drivers/${SOC}/analog.c)
-zephyr_library_sources(drivers/${SOC}/stimer.c)
 endif()
 
 # MbedTLS HW acceleration
@@ -65,63 +69,69 @@ if(CONFIG_SOC_FLASH_TELINK_TLX OR CONFIG_USB_TELINK_TLX)
 	)
 endif()
 
-zephyr_library_sources_ifdef(CONFIG_GPIO_TELINK_B9X drivers/${SOC}/gpio.c)
+# GPIO driver reference sources
+if(CONFIG_GPIO_TELINK_B9X OR CONFIG_GPIO_TELINK_TLX)
+	zephyr_library_sources(drivers/${SOC}/gpio.c)
+endif()
 
 # PWM driver reference sources
-zephyr_library_sources_ifdef(CONFIG_PWM_TELINK_B9X drivers/${SOC}/pwm.c)
-zephyr_library_sources_ifdef(CONFIG_PWM_TELINK_TLX drivers/${SOC}/pwm.c)
+if(CONFIG_PWM_TELINK_B9X OR CONFIG_PWM_TELINK_TLX)
+	zephyr_library_sources(drivers/${SOC}/pwm.c)
+endif()
 
 # SPI driver reference sources
-zephyr_library_sources_ifdef(CONFIG_SPI_TELINK_B9X drivers/${SOC}/gpio.c)
-zephyr_library_sources_ifdef(CONFIG_SPI_TELINK_TLX drivers/${SOC}/gpio.c)
+if(CONFIG_SPI_TELINK_B9X OR CONFIG_SPI_TELINK_TLX)
+	zephyr_library_sources(drivers/${SOC}/gpio.c)
+endif()
 
 # I2C driver reference sources
-zephyr_library_sources_ifdef(CONFIG_I2C_TELINK_B9X drivers/${SOC}/i2c.c)
-zephyr_library_sources_ifdef(CONFIG_I2C_TELINK_TLX drivers/${SOC}/i2c.c)
+if(CONFIG_I2C_TELINK_B9X OR CONFIG_I2C_TELINK_TLX)
+	zephyr_library_sources(drivers/${SOC}/i2c.c)
+endif()
 
 # RF driver reference sources
 if(CONFIG_BT_B9X OR CONFIG_IEEE802154_TELINK_B9X)
 	zephyr_library_sources(
 		drivers/${SOC}/aes.c
 		drivers/${SOC}/stimer.c
-		common/b9x_rf_power.c
+		common/${SOC_FAMILY}_rf_power.c
 	)
 endif()
 if(CONFIG_BT_TLX OR CONFIG_IEEE802154_TELINK_TLX)
+	zephyr_include_directories(common/${SOC_FAMILY})
 	zephyr_library_sources(
-		common/b9x_rf_power.c
+		drivers/${SOC}/aes.c
+		common/${SOC_FAMILY}/${SOC_FAMILY}_rf_power.c
 	)
 endif()
 
 # ADC driver reference sources
-zephyr_library_sources_ifdef(CONFIG_ADC_TELINK_B9X drivers/${SOC}/adc.c)
-zephyr_library_sources_ifdef(CONFIG_ADC_TELINK_B9X drivers/${SOC}/gpio.c)
-zephyr_library_sources_ifdef(CONFIG_ADC_TELINK_TLX drivers/${SOC}/adc.c)
-zephyr_library_sources_ifdef(CONFIG_ADC_TELINK_TLX drivers/${SOC}/gpio.c)
+if(CONFIG_ADC_TELINK_B9X OR CONFIG_ADC_TELINK_TLX)
+	zephyr_library_sources(drivers/${SOC}/gpio.c)
+	zephyr_library_sources(drivers/${SOC}/adc.c)
+endif()
 
 # USB driver reference sources
-zephyr_library_sources_ifdef(CONFIG_USB_TELINK_B9X drivers/${SOC}/gpio.c)
-zephyr_library_sources_ifdef(CONFIG_USB_TELINK_B9X drivers/${SOC}/usbhw.c)
-zephyr_library_sources_ifdef(CONFIG_USB_TELINK_TLX drivers/${SOC}/gpio.c)
-zephyr_library_sources_ifdef(CONFIG_USB_TELINK_TLX drivers/${SOC}/usbhw.c)
+if(CONFIG_USB_TELINK_B9X OR CONFIG_USB_TELINK_TLX)
+	zephyr_library_sources(drivers/${SOC}/gpio.c)
+	zephyr_library_sources(drivers/${SOC}/usbhw.c)
+endif()
 
 #PM driver dependency
-if (NOT CONFIG_SOC_RISCV_TELINK_TL321X)
-zephyr_library_sources_ifdef(CONFIG_PM drivers/${SOC}/stimer.c)
-endif()
-zephyr_library_sources_ifdef(CONFIG_PM common/sleep.c)
+if (CONFIG_SOC_RISCV_TELINK_TL321X)
+	zephyr_library_sources_ifdef(CONFIG_PM common/${SOC_FAMILY}/${SOC_FAMILY}_sleep.c)
+else()
+	zephyr_library_sources_ifdef(CONFIG_PM drivers/${SOC}/stimer.c)
+	zephyr_library_sources_ifdef(CONFIG_PM common/${SOC_FAMILY}_sleep.c)
+endif() # CONFIG_SOC_RISCV_TELINK_TL321X
+
 
 #BLE flash reference sources
 if (CONFIG_IEEE802154_TELINK_B9X OR CONFIG_IEEE802154_TELINK_TLX)
 
-zephyr_include_directories_ifdef(CONFIG_IEEE802154_TELINK_B9X
+zephyr_include_directories(
 	ble
-	ble/vendor/controller/b9x
-)
-
-zephyr_include_directories_ifdef(CONFIG_IEEE802154_TELINK_TLX
-	ble
-	ble/vendor/controller/tlx
+	ble/vendor/controller/${SOC_FAMILY}
 )
 
 endif()
@@ -129,47 +139,29 @@ endif()
 # BLE stack reference sources
 if (CONFIG_BT_B9X OR CONFIG_BT_TLX)
 
-zephyr_include_directories_ifdef(CONFIG_BT_B9X
+zephyr_include_directories(
 	ble
-	ble/vendor/controller/b9x
+	ble/vendor/controller/${SOC_FAMILY}
 )
 
-zephyr_include_directories_ifdef(CONFIG_BT_TLX
-	ble
-	ble/vendor/controller/tlx
-)
-
-zephyr_library_sources_ifdef(CONFIG_BT_B9X
-	drivers/${SOC}/aes.c
-	drivers/${SOC}/flash.c
-	drivers/${SOC}/stimer.c
+zephyr_library_sources(
 	ble/common/utility.c
-	ble/vendor/controller/b9x/b9x_bt.c
-	ble/vendor/controller/b9x/b9x_bt_init.c
-	ble/vendor/controller/b9x/b9x_bt_buffer.c
-	ble/vendor/controller/b9x/b9x_bt_flash.c
-)
-
-zephyr_library_sources_ifdef(CONFIG_BT_TLX
-	drivers/${SOC}/aes.c
-	drivers/${SOC}/flash.c
-	ble/common/utility.c
-	ble/vendor/controller/tlx/tlx_bt.c
-	ble/vendor/controller/tlx/tlx_bt_init.c
-	ble/vendor/controller/tlx/tlx_bt_buffer.c
-	ble/vendor/controller/tlx/tlx_bt_flash.c
+	ble/vendor/controller/${SOC_FAMILY}/${SOC_FAMILY}_bt.c
+	ble/vendor/controller/${SOC_FAMILY}/${SOC_FAMILY}_bt_init.c
+	ble/vendor/controller/${SOC_FAMILY}/${SOC_FAMILY}_bt_buffer.c
+	ble/vendor/controller/${SOC_FAMILY}/${SOC_FAMILY}_bt_flash.c
 )
 
 endif() # (CONFIG_BT_B9X OR CONFIG_BT_TLX)
 
-add_definitions(-DSTD_GCC)
+if (CONFIG_SOC_RISCV_TELINK_TL321X)
+	add_definitions(-DSTD_GCC)
+endif()
 
 # Retention feature
 if (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION OR CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
-
-zephyr_library_sources(common/b9x_context.S)
-
-endif() # CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION OR CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
+	zephyr_library_sources(common/tl_context.S)
+endif()
 
 if (CONFIG_SOC_RISCV_TELINK_TL321X)
 target_compile_options(${ZEPHYR_CURRENT_LIBRARY} PRIVATE
