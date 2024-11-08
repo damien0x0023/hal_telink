@@ -26,12 +26,12 @@
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/drivers/flash.h>
 
-#if CONFIG_TLX_BLE_CTRL_MAC_TYPE_PUBLIC || CONFIG_TLX_BLE_CTRL_MAC_FLASH
+#if CONFIG_TL_BLE_CTRL_MAC_TYPE_PUBLIC || CONFIG_TL_BLE_CTRL_MAC_FLASH
 static const struct device *flash_device =
 	DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 #endif
 
-#if CONFIG_TLX_BLE_CTRL_MAC_TYPE_PUBLIC
+#if CONFIG_TL_BLE_CTRL_MAC_TYPE_PUBLIC
 static int get_bytes_from_str(uint8_t *buf, int buf_len, const char *src)
 {
 	unsigned int i;
@@ -69,7 +69,7 @@ static int get_bytes_from_str(uint8_t *buf, int buf_len, const char *src)
 _attribute_no_inline_ int tlx_bt_blc_mac_init(uint8_t *bt_mac)
 {
 	int err = 0;
-#if CONFIG_TLX_BLE_CTRL_MAC_TYPE_PUBLIC
+#if CONFIG_TL_BLE_CTRL_MAC_TYPE_PUBLIC
 	uint8_t dummy_mac[BLE_ADDR_LEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 	err = flash_read(flash_device, FIXED_PARTITION_OFFSET(vendor_partition)
@@ -81,12 +81,12 @@ _attribute_no_inline_ int tlx_bt_blc_mac_init(uint8_t *bt_mac)
 		return 0;
 
 	err = get_bytes_from_str(bt_mac, BLE_ADDR_LEN,
-			CONFIG_TLX_BLE_PUBLIC_MAC_ADDR);
+			CONFIG_TL_BLE_PUBLIC_MAC_ADDR);
 	if (err)
 		return err;
 
-#elif CONFIG_TLX_BLE_CTRL_MAC_TYPE_RANDOM_STATIC
-#if CONFIG_TLX_BLE_CTRL_MAC_FLASH
+#elif CONFIG_TL_BLE_CTRL_MAC_TYPE_RANDOM_STATIC
+#if CONFIG_TL_BLE_CTRL_MAC_FLASH
 	uint8_t temp_mac[BLE_ADDR_LEN + 3];
 
 	err = flash_read(flash_device, FIXED_PARTITION_OFFSET(vendor_partition)

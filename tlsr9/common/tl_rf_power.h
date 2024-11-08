@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2024 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * Copyright (c) 2023 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,19 +16,19 @@
  *
  *****************************************************************************/
 
-#ifndef TLX_RF_POWER_H_
-#define TLX_RF_POWER_H_
+#ifndef TL_RF_POWER_H_
+#define TL_RF_POWER_H_
 
 #include "stdint.h"
 
 #if CONFIG_SOC_RISCV_TELINK_TL321X
-#define TLX_TX_POWER_MIN                    (-19)
-#define TLX_TX_POWER_MAX                    (31)
+#define TL_TX_POWER_MIN                    (-19)
+#define TL_TX_POWER_MAX                    (31)
 #else
-#define TLX_TX_POWER_MIN                    (-30)
-#define TLX_TX_POWER_MAX                    (9)
+#define TL_TX_POWER_MIN                    (-30)
+#define TL_TX_POWER_MAX                    (9)
 #endif
 
-extern const uint8_t tlx_tx_pwr_lt[];  
+extern const uint8_t tl_tx_pwr_lt[];
 
-#endif /* TLX_RF_POWER_H_ */
+#endif /* TL_RF_POWER_H_ */

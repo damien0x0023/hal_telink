@@ -36,8 +36,8 @@
 #endif
 
 /* Module defines */
-#define BLE_THREAD_STACK_SIZE CONFIG_TLX_BLE_CTRL_THREAD_STACK_SIZE
-#define BLE_THREAD_PRIORITY CONFIG_TLX_BLE_CTRL_THREAD_PRIORITY
+#define BLE_THREAD_STACK_SIZE CONFIG_TL_BLE_CTRL_THREAD_STACK_SIZE
+#define BLE_THREAD_PRIORITY CONFIG_TL_BLE_CTRL_THREAD_PRIORITY
 #define BLE_CONTROLLER_SEMAPHORE_MAX 50
 
 #define BYTES_TO_UINT16(n, p)                                                                      \
@@ -50,7 +50,7 @@
 		p += 2;                                                                            \
 	}
 
-static volatile enum tlx_bt_controller_state tlx_bt_state = TLX_BT_CONTROLLER_STATE_STOPPED;
+static volatile enum tl_bt_controller_state tl_bt_state = TL_BT_CONTROLLER_STATE_STOPPED;
 static void tlx_bt_controller_thread();
 K_THREAD_STACK_DEFINE(tlx_bt_controller_thread_stack, BLE_THREAD_STACK_SIZE);
 static struct k_thread tlx_bt_controller_thread_data;
@@ -107,17 +107,17 @@ static int tlx_bt_hci_tx_handler(void)
 			BSTREAM_TO_UINT16(len, p);
 			bltHci_txfifo.rptr++;
 
-			if (tlx_bt_state == TLX_BT_CONTROLLER_STATE_ACTIVE) {
+			if (tl_bt_state == TL_BT_CONTROLLER_STATE_ACTIVE) {
 				/* Send data to the host */
 				if (tlx_ctrl.callbacks.host_read_packet) {
 					tlx_ctrl.callbacks.host_read_packet(p, len);
 				}
-			} else if (tlx_bt_state == TLX_BT_CONTROLLER_STATE_STOPPING) {
+			} else if (tl_bt_state == TL_BT_CONTROLLER_STATE_STOPPING) {
 				/* In this state HCI reset is sent - waiting for command complete */
 				static const uint8_t hci_reset_cmd_complette[] = {0x04, 0x0e, 0x04, 0x01, 0x03, 0x0c, 0x00};
 
 				if (len == sizeof(hci_reset_cmd_complette) && !memcmp(p, hci_reset_cmd_complette, len)) {
-					tlx_bt_state = TLX_BT_CONTROLLER_STATE_STOPPED;
+					tl_bt_state = TL_BT_CONTROLLER_STATE_STOPPED;
 					k_sem_give(&controller_sem);
 				}
 			}
@@ -163,8 +163,8 @@ static int tlx_bt_hci_rx_handler(void)
  */
 static void tlx_bt_controller_thread()
 {
-	while (tlx_bt_state == TLX_BT_CONTROLLER_STATE_ACTIVE ||
-		tlx_bt_state == TLX_BT_CONTROLLER_STATE_STOPPING) {
+	while (tl_bt_state == TL_BT_CONTROLLER_STATE_ACTIVE ||
+		tl_bt_state == TL_BT_CONTROLLER_STATE_STOPPING) {
 		k_sem_take(&controller_sem, K_FOREVER);
 		blc_sdk_main_loop();
 	}
@@ -211,11 +211,11 @@ int tlx_bt_controller_init()
 	rf_drv_ble_init();
 
 #ifdef CONFIG_BT_CENTRAL
-	app_acl_mstTxfifo = (u8 *)calloc(ACL_MASTER_TX_FIFO_SIZE * ACL_MASTER_TX_FIFO_NUM * CONFIG_TLX_BLE_CTRL_MASTER_MAX_NUM,1);
+	app_acl_mstTxfifo = (u8 *)calloc(ACL_MASTER_TX_FIFO_SIZE * ACL_MASTER_TX_FIFO_NUM * CONFIG_TL_BLE_CTRL_MASTER_MAX_NUM,1);
 #endif /* CONFIG_BT_CENTRAL */
 
 #ifdef CONFIG_BT_PERIPHERAL
-	app_acl_slvTxfifo = (u8 *)calloc(ACL_SLAVE_TX_FIFO_SIZE * ACL_SLAVE_TX_FIFO_NUM * CONFIG_TLX_BLE_CTRL_SLAVE_MAX_NUM,1);
+	app_acl_slvTxfifo = (u8 *)calloc(ACL_SLAVE_TX_FIFO_SIZE * ACL_SLAVE_TX_FIFO_NUM * CONFIG_TL_BLE_CTRL_SLAVE_MAX_NUM,1);
 #endif /* CONFIG_BT_PERIPHERAL */
 	
 	app_acl_rxfifo = (u8 *)calloc(ACL_RX_FIFO_SIZE * ACL_RX_FIFO_NUM,1);
@@ -250,7 +250,7 @@ int tlx_bt_controller_init()
 #endif
 
 	/* Start thread */
-	tlx_bt_state = TLX_BT_CONTROLLER_STATE_ACTIVE;
+	tl_bt_state = TL_BT_CONTROLLER_STATE_ACTIVE;
 	k_thread_start(&tlx_bt_controller_thread_data);
 
 	return status;
@@ -262,7 +262,7 @@ int tlx_bt_controller_init()
 void tlx_bt_controller_deinit()
 {
 	/* start BLE stopping procedure */
-	tlx_bt_state = TLX_BT_CONTROLLER_STATE_STOPPING;
+	tl_bt_state = TL_BT_CONTROLLER_STATE_STOPPING;
 
 	/* reset controller */
 	static const uint8_t hci_reset_cmd[] = {0x03, 0x0c, 0x00};
@@ -302,7 +302,7 @@ void tlx_bt_controller_deinit()
  */
 void tlx_bt_host_send_packet(uint8_t type, const uint8_t *data, uint16_t len)
 {
-	if (tlx_bt_state == TLX_BT_CONTROLLER_STATE_STOPPED) {
+	if (tl_bt_state == TL_BT_CONTROLLER_STATE_STOPPED) {
 		return;
 	}
 
@@ -326,7 +326,7 @@ void tlx_bt_host_callback_register(const tlx_bt_host_callback_t *pcb)
 /**
  * @brief     Get state of Telink TLX BLE Controller
  */
-enum tlx_bt_controller_state tlx_bt_controller_state(void) {
+enum tl_bt_controller_state tl_bt_controller_state(void) {
 
-	return tlx_bt_state;
+	return tl_bt_state;
 }

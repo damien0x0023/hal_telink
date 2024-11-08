@@ -23,10 +23,10 @@
  *  @brief b9x_bt_contriller_state
  *  B9X Bluetooth controller state
  */
-enum b9x_bt_controller_state {
-	B9X_BT_CONTROLLER_STATE_STOPPED = 0,
-	B9X_BT_CONTROLLER_STATE_ACTIVE,
-	B9X_BT_CONTROLLER_STATE_STOPPING
+enum tl_bt_controller_state {
+	TL_BT_CONTROLLER_STATE_STOPPED = 0,
+	TL_BT_CONTROLLER_STATE_ACTIVE,
+	TL_BT_CONTROLLER_STATE_STOPPING
 };
 
 /**
@@ -64,7 +64,7 @@ void b9x_bt_controller_deinit(void);
 /**
  * @brief     Get state of Telink B9X BLE Controller
  */
-enum b9x_bt_controller_state b9x_bt_controller_state(void);
+enum tl_bt_controller_state tl_bt_controller_state(void);
 
 
 #endif /* B9X_BT_H_ */

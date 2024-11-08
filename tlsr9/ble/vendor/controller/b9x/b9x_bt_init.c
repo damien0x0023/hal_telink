@@ -31,44 +31,44 @@
 #include "b9x_bt_buffer.h"
 #include "b9x_bt_init.h"
 #include "b9x_bt_flash.h"
-#include "b9x_rf_power.h"
+#include "tl_rf_power.h"
 
 #ifdef CONFIG_PM
 #include "ext_driver/ext_pm.h"
 #endif /* CONFIG_PM */
 
-#if CONFIG_B9X_BLE_CTRL_EXT_ADV
+#if CONFIG_TL_BLE_CTRL_EXT_ADV
 
 /** Number of Supported Advertising Sets, no exceed "ADV_SETS_NUMBER_MAX" */
-#define APP_ADV_SETS_NUMBER CONFIG_B9X_BLE_CTRL_EXT_ADV_SETS_NUM
+#define APP_ADV_SETS_NUMBER CONFIG_TL_BLE_CTRL_EXT_ADV_SETS_NUM
 
 /** Maximum Advertising Data Length,   (if legacy ADV, max length 31 bytes is enough) */
-#define APP_MAX_LENGTH_ADV_DATA CONFIG_B9X_BLE_CTRL_EXT_ADV_DATA_LEN_MAX
+#define APP_MAX_LENGTH_ADV_DATA CONFIG_TL_BLE_CTRL_EXT_ADV_DATA_LEN_MAX
 
 /** Maximum Scan Response Data Length, (if legacy ADV, max length 31 bytes is enough) */
-#define APP_MAX_LENGTH_SCAN_RESPONSE_DATA CONFIG_B9X_BLE_CTRL_EXT_ADV_SCAN_DATA_LEN_MAX
+#define APP_MAX_LENGTH_SCAN_RESPONSE_DATA CONFIG_TL_BLE_CTRL_EXT_ADV_SCAN_DATA_LEN_MAX
 
 _attribute_ble_data_retention_ u8 app_advSet_buffer[ADV_SET_PARAM_LENGTH * APP_ADV_SETS_NUMBER];
 _attribute_ble_data_retention_ u8 app_advData_buffer[APP_MAX_LENGTH_ADV_DATA * APP_ADV_SETS_NUMBER];
 _attribute_ble_data_retention_ u8
 	app_scanRspData_buffer[APP_MAX_LENGTH_SCAN_RESPONSE_DATA * APP_ADV_SETS_NUMBER];
 
-#endif /* CONFIG_B9X_BLE_CTRL_EXT_ADV */
+#endif /* CONFIG_TL_BLE_CTRL_EXT_ADV */
 
-#if CONFIG_B9X_BLE_CTRL_PER_ADV
+#if CONFIG_TL_BLE_CTRL_PER_ADV
 
 /** Number of Supported Periodic Advertising Sets, no exceed "PERIODIC_ADV_NUMBER_MAX" */
-#define APP_PER_ADV_SETS_NUMBER CONFIG_B9X_BLE_CTRL_PER_ADV_SETS_NUM
+#define APP_PER_ADV_SETS_NUMBER CONFIG_TL_BLE_CTRL_PER_ADV_SETS_NUM
 
 /** Maximum Periodic Advertising Data Length */
-#define APP_MAX_LENGTH_PER_ADV_DATA CONFIG_B9X_BLE_CTRL_PER_ADV_DATA_LEN_MAX
+#define APP_MAX_LENGTH_PER_ADV_DATA CONFIG_TL_BLE_CTRL_PER_ADV_DATA_LEN_MAX
 
 _attribute_ble_data_retention_ u8
 	app_perdAdvSet_buffer[PERD_ADV_PARAM_LENGTH * APP_PER_ADV_SETS_NUMBER];
 _attribute_ble_data_retention_ u8
 	app_perdAdvData_buffer[APP_MAX_LENGTH_PER_ADV_DATA * APP_PER_ADV_SETS_NUMBER];
 
-#endif /* CONFIG_B9X_BLE_CTRL_PER_ADV */
+#endif /* CONFIG_TL_BLE_CTRL_PER_ADV */
 
 /**
  * @brief       Telink B9X BLE Controller initialization
@@ -106,26 +106,26 @@ int b9x_bt_blc_init(void *prx, void *ptx)
 	blc_ll_initAclSlaveRole_module();
 #endif /* CONFIG_BT_PERIPHERAL */
 
-#if CONFIG_B9X_BLE_CTRL_EXT_ADV
+#if CONFIG_TL_BLE_CTRL_EXT_ADV
 	blc_ll_initExtendedAdvertising_module();
 	blc_ll_initExtendedAdvSetBuffer(app_advSet_buffer, APP_ADV_SETS_NUMBER);
 	blc_ll_initExtAdvDataBuffer(app_advData_buffer, APP_MAX_LENGTH_ADV_DATA);
 	blc_ll_initExtScanRspDataBuffer(app_scanRspData_buffer, APP_MAX_LENGTH_SCAN_RESPONSE_DATA);
-#endif /* CONFIG_B9X_BLE_CTRL_EXT_ADV */
+#endif /* CONFIG_TL_BLE_CTRL_EXT_ADV */
 
-#if CONFIG_B9X_BLE_CTRL_PER_ADV
+#if CONFIG_TL_BLE_CTRL_PER_ADV
 	blc_ll_initPeriodicAdvertising_module();
 	blc_ll_initPeriodicAdvParamBuffer(app_perdAdvSet_buffer, APP_PER_ADV_SETS_NUMBER);
 	blc_ll_initPeriodicAdvDataBuffer(app_perdAdvData_buffer, APP_MAX_LENGTH_PER_ADV_DATA);
-#endif /* CONFIG_B9X_BLE_CTRL_PER_ADV */
+#endif /* CONFIG_TL_BLE_CTRL_PER_ADV */
 
-#if CONFIG_B9X_BLE_CTRL_EXT_SCAN
+#if CONFIG_TL_BLE_CTRL_EXT_SCAN
 	blc_ll_initExtendedScanning_module();
-#endif /* CONFIG_B9X_BLE_CTRL_EXT_SCAN */
+#endif /* CONFIG_TL_BLE_CTRL_EXT_SCAN */
 
-#if CONFIG_B9X_BLE_CTRL_PER_ADV_SYNC
+#if CONFIG_TL_BLE_CTRL_PER_ADV_SYNC
 	blc_ll_initPeriodicAdvertisingSynchronization_module();
-#endif /* CONFIG_B9X_BLE_CTRL_PER_ADV_SYNC */
+#endif /* CONFIG_TL_BLE_CTRL_PER_ADV_SYNC */
 
 	blc_ll_setAclConnMaxOctetsNumber(ACL_CONN_MAX_RX_OCTETS, ACL_MASTER_MAX_TX_OCTETS,
 					 ACL_SLAVE_MAX_TX_OCTETS);
@@ -140,7 +140,7 @@ int b9x_bt_blc_init(void *prx, void *ptx)
 	/* ACL Master TX FIFO */
 	if (blc_ll_initAclConnMasterTxFifo(app_acl_mstTxfifo, ACL_MASTER_TX_FIFO_SIZE,
 					   ACL_MASTER_TX_FIFO_NUM,
-					   CONFIG_B9X_BLE_CTRL_MASTER_MAX_NUM) != BLE_SUCCESS) {
+					   CONFIG_TL_BLE_CTRL_MASTER_MAX_NUM) != BLE_SUCCESS) {
 		return INIT_FAILED;
 	}
 #endif /* CONFIG_BT_CENTRAL */
@@ -149,7 +149,7 @@ int b9x_bt_blc_init(void *prx, void *ptx)
 	/* ACL Slave TX FIFO */
 	if (blc_ll_initAclConnSlaveTxFifo(app_acl_slvTxfifo, ACL_SLAVE_TX_FIFO_SIZE,
 					  ACL_SLAVE_TX_FIFO_NUM,
-					  CONFIG_B9X_BLE_CTRL_SLAVE_MAX_NUM) != BLE_SUCCESS) {
+					  CONFIG_TL_BLE_CTRL_SLAVE_MAX_NUM) != BLE_SUCCESS) {
 		return INIT_FAILED;
 	}
 #endif /* CONFIG_BT_PERIPHERAL */
@@ -159,11 +159,11 @@ int b9x_bt_blc_init(void *prx, void *ptx)
 	blc_ll_configScanEnableStrategy(SCAN_STRATEGY_1);
 #endif
 
-	blc_ll_setMaxConnectionNumber(CONFIG_B9X_BLE_CTRL_MASTER_MAX_NUM,
-				      CONFIG_B9X_BLE_CTRL_SLAVE_MAX_NUM);
-	blc_ll_setAclMasterConnectionInterval(CONFIG_B9X_BLE_CTRL_CONNECTION_INTERVAL_IDX);
-	blc_ll_setCreateConnectionTimeout(CONFIG_B9X_BLE_CTRL_CONNECTION_TIMEOUT_MS);
-	rf_set_power_level(b9x_tx_pwr_lt[CONFIG_B9X_BLE_CTRL_RF_POWER - B9X_TX_POWER_MIN]);
+	blc_ll_setMaxConnectionNumber(CONFIG_TL_BLE_CTRL_MASTER_MAX_NUM,
+				      CONFIG_TL_BLE_CTRL_SLAVE_MAX_NUM);
+	blc_ll_setAclMasterConnectionInterval(CONFIG_TL_BLE_CTRL_CONNECTION_INTERVAL_IDX);
+	blc_ll_setCreateConnectionTimeout(CONFIG_TL_BLE_CTRL_CONNECTION_TIMEOUT_MS);
+	rf_set_power_level(tl_tx_pwr_lt[CONFIG_TL_BLE_CTRL_RF_POWER - TL_TX_POWER_MIN]);
 
 	blc_ll_initChannelSelectionAlgorithm_2_feature();
 	blc_ll_init2MPhyCodedPhy_feature();

@@ -19,13 +19,13 @@
 #define TLX_BT_H_
 
 /**
- *  @brief tlx_bt_contriller_state
+ *  @brief tl_bt_contriller_state
  *  TLX Bluetooth controller state
  */
-enum tlx_bt_controller_state {
-	TLX_BT_CONTROLLER_STATE_STOPPED = 0,
-	TLX_BT_CONTROLLER_STATE_ACTIVE,
-	TLX_BT_CONTROLLER_STATE_STOPPING
+enum tl_bt_controller_state {
+	TL_BT_CONTROLLER_STATE_STOPPED = 0,
+	TL_BT_CONTROLLER_STATE_ACTIVE,
+	TL_BT_CONTROLLER_STATE_STOPPING
 };
 
 /**
@@ -63,7 +63,7 @@ void tlx_bt_controller_deinit(void);
 /**
  * @brief     Get state of Telink TLX BLE Controller
  */
-enum tlx_bt_controller_state tlx_bt_controller_state(void);
+enum tl_bt_controller_state tl_bt_controller_state(void);
 
 
 #endif /* TLX_BT_H_ */

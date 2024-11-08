@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2024 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * Copyright (c) 2023 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,37 +15,46 @@
  * limitations under the License.
  *
  *****************************************************************************/
-#include "tlx_sleep.h"
+#include <tl_sleep.h>
 #include <ext_driver/ext_pm.h>
 
-#if CONFIG_BT_TLX
-#if CONFIG_SOC_RISCV_TELINK_TL721X
+#if (CONFIG_BT_B9X || CONFIG_BT_TLX)
+#if CONFIG_SOC_RISCV_TELINK_B91
+#include <stack/ble/B91/controller/os_sup.h>
+#elif CONFIG_SOC_RISCV_TELINK_B92
+#include <stack/ble/B92/controller/os_sup.h>
+#elif CONFIG_SOC_RISCV_TELINK_B95
 #include <stack/ble/B95/controller/os_sup.h>
 #elif CONFIG_SOC_RISCV_TELINK_TL321X
 #include <stack/ble/TL321X/controller/os_sup.h>
 #endif
+#include <tl_rf_power.h>
+#endif /* CONFIG_BT_B9X || CONFIG_BT_TLX */
+
+#if CONFIG_BT_B9X
+#include <b9x_bt.h>
+#elif CONFIG_BT_TLX
 #include <tlx_bt.h>
-#include <tlx_rf_power.h>
-#endif /*  CONFIG_BT_TLX */
+#endif /* CONFIG_BT_B9X */
 
 /**
- * @brief     This function sets TLX MCU to suspend mode
+ * @brief     This function sets Telink MCU to suspend mode
  * @param[in] wake_stimer_tick - wake-up stimer tick
  * @return    true if suspend mode entered otherwise false
  */
-bool tlx_suspend(uint32_t wake_stimer_tick)
+bool tl_suspend(uint32_t wake_stimer_tick)
 {
 	bool result = false;
 
-#if CONFIG_BT_TLX
-	enum tlx_bt_controller_state state = tlx_bt_controller_state();
+#if (CONFIG_BT_B9X || CONFIG_BT_TLX)
+	enum tl_bt_controller_state state = tl_bt_controller_state();
 
-	if (state == TLX_BT_CONTROLLER_STATE_ACTIVE ||
-		state == TLX_BT_CONTROLLER_STATE_STOPPING) {
+	if (state == TL_BT_CONTROLLER_STATE_ACTIVE ||
+		state == TL_BT_CONTROLLER_STATE_STOPPED) {
 		blc_pm_setAppWakeupLowPower(wake_stimer_tick, 1);
 		if (!blc_pm_handler()) {
-			rf_set_power_level(tlx_tx_pwr_lt[CONFIG_TLX_BLE_CTRL_RF_POWER
-			- TLX_TX_POWER_MIN]);
+			rf_set_power_level(tl_tx_pwr_lt[CONFIG_TL_BLE_CTRL_RF_POWER
+			- TL_TX_POWER_MIN]);
 			result = true;
 		}
 		blc_pm_setAppWakeupLowPower(0, 0);
@@ -60,37 +69,46 @@ bool tlx_suspend(uint32_t wake_stimer_tick)
 		wake_stimer_tick) != STATUS_GPIO_ERR_NO_ENTER_PM) {
 		result = true;
 	}
-#endif /* CONFIG_BT_TLX */
+#endif /* CONFIG_BT_B9X || CONFIG_BT_TL */
 
 	return result;
 }
 
-#if CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
+#if (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \
+CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
 
-#if CONFIG_SOC_RISCV_TELINK_TL721X
+#if CONFIG_SOC_RISCV_TELINK_B91
+#define DEEPSLEEP_MODE_RET_SRAM DEEPSLEEP_MODE_RET_SRAM_LOW64K
+#elif CONFIG_SOC_RISCV_TELINK_B92
+#define DEEPSLEEP_MODE_RET_SRAM DEEPSLEEP_MODE_RET_SRAM_LOW96K
+#elif CONFIG_SOC_RISCV_TELINK_B95
 #define DEEPSLEEP_MODE_RET_SRAM DEEPSLEEP_MODE_RET_SRAM_LOW96K
 #elif CONFIG_SOC_RISCV_TELINK_TL321X
 #define DEEPSLEEP_MODE_RET_SRAM DEEPSLEEP_MODE_RET_SRAM_LOW96K
 #endif
 
-bool tlx_deep_sleep(uint32_t wake_stimer_tick)
+bool tl_deep_sleep(uint32_t wake_stimer_tick)
 {
 	bool result = false;
 	static volatile bool tl_sleep_retention
 	__attribute__ ((section (".retention_data"))) = false;
 
 	extern void tl_context_save(void);
+#if CONFIG_BT_B9X
+	extern void soc_b9x_restore(void);
+#elif CONFIG_BT_TLX
 	extern void soc_tlx_restore(void);
+#endif
 
-#if CONFIG_BT_TLX
-	enum tlx_bt_controller_state state = tlx_bt_controller_state();
+#if (CONFIG_BT_B9X || CONFIG_BT_TLX)
+	enum tl_bt_controller_state state = tl_bt_controller_state();
 
-	if (state == TLX_BT_CONTROLLER_STATE_ACTIVE ||
-		state == TLX_BT_CONTROLLER_STATE_STOPPING) {
+	if (state == TL_BT_CONTROLLER_STATE_ACTIVE ||
+		state == TL_BT_CONTROLLER_STATE_STOPPED) {
 		blc_pm_setAppWakeupLowPower(wake_stimer_tick, 1);
 		if (!blc_pm_handler()) {
-			rf_set_power_level(tlx_tx_pwr_lt[CONFIG_TLX_BLE_CTRL_RF_POWER
-			- TLX_TX_POWER_MIN]);
+			rf_set_power_level(tl_tx_pwr_lt[CONFIG_TL_BLE_CTRL_RF_POWER
+			- TL_TX_POWER_MIN]);
 			result = true;
 		}
 		blc_pm_setAppWakeupLowPower(0, 0);
@@ -103,7 +121,11 @@ bool tlx_deep_sleep(uint32_t wake_stimer_tick)
 				wake_stimer_tick);
 			tl_sleep_retention = false;
 		} else {
+#if CONFIG_BT_B9X
+			soc_b9x_restore();
+#elif CONFIG_BT_TLX
 			soc_tlx_restore();
+#endif
 			tl_sleep_retention = false;
 			result = true;
 		}
@@ -117,13 +139,18 @@ bool tlx_deep_sleep(uint32_t wake_stimer_tick)
 			wake_stimer_tick);
 		tl_sleep_retention = false;
 	} else {
+#if CONFIG_BT_B9X
+		soc_b9x_restore();
+#elif CONFIG_BT_TLX
 		soc_tlx_restore();
+#endif
 		tl_sleep_retention = false;
 		result = true;
 	}
-#endif /* || CONFIG_BT_TLX */
+#endif /* CONFIG_BT_B9X || CONFIG_BT_TLX */
 
 	return result;
 }
 
-#endif /* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION */
+#endif /* (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \ */
+/* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION) */

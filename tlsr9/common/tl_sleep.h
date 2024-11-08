@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2024 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * Copyright (c) 2023-2024 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  * All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifndef __TLX_SLEEP_H
-#define __TLX_SLEEP_H
+#ifndef __TL_SLEEP_H
+#define __TL_SLEEP_H
 
-bool tlx_suspend(uint32_t wake_stimer_tick);
-#if CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
-bool tlx_deep_sleep(uint32_t wake_stimer_tick);
-#endif /* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION */
+bool tl_suspend(uint32_t wake_stimer_tick);
+#if (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || \
+CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION)
+bool tl_deep_sleep(uint32_t wake_stimer_tick);
+#endif /* (CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION || */
+/* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION) */
 
-#endif /* __TLX_SLEEP_H */
+#endif /* __TL_SLEEP_H */
