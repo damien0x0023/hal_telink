@@ -17,6 +17,7 @@
  *****************************************************************************/
 #include "lib/include/sys.h"
 #include "lib/include/flash_base.h"
+#include "lib/include/flash_prot.h"
 #include "flash.h"
 
 #include "lib/include/mspi.h"
