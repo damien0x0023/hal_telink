@@ -22,18 +22,22 @@ endif()
 
 zephyr_library()
 
-# common headers for all
-zephyr_include_directories(common)
-zephyr_include_directories(drivers/${SOC}/compatibility_pack)
-zephyr_include_directories(drivers/${SOC}/reg_include)
-zephyr_include_directories(drivers/${SOC}/ext_driver)
+# common headers for all 
+zephyr_include_directories(
+	common
+	drivers/${SOC}
+	drivers/${SOC}/compatibility_pack
+	drivers/${SOC}/reg_include
+	drivers/${SOC}/ext_driver
+)
 
 if (NOT CONFIG_SOC_RISCV_TELINK_B91)
 
 # common headers excluse B91
 zephyr_include_directories(
 	drivers/${SOC}/flash
-	drivers/${SOC}/lib/include/ske
+	drivers/${SOC}/lib/include
+	drivers/${SOC}/lib/include/pke
 	)
 
 # B92 headers
@@ -45,11 +49,11 @@ endif()
 
 # add for B95/TLX headers
 if (CONFIG_SOC_RISCV_TELINK_B95 OR CONFIG_SOC_SERIES_RISCV_TELINK_TLX)
-	zephyr_include_directories(drivers/${SOC}/lib/include)
-	zephyr_include_directories(drivers/${SOC}/lib/include/rf)
-	zephyr_include_directories(drivers/${SOC}/lib/include/ske)
-	zephyr_include_directories(drivers/${SOC}/lib/include/trng)
-	zephyr_include_directories(drivers/${SOC})
+	zephyr_include_directories(
+		drivers/${SOC}/lib/include/rf
+		drivers/${SOC}/lib/include/ske
+		drivers/${SOC}/lib/include/trng
+	)
 endif()
 
 # add for TLX or B9X headers

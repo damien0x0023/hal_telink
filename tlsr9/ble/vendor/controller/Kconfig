@@ -40,7 +40,7 @@ config TL_BLE_CTRL_CONNECTION_TIMEOUT_MS
 	help
 	  ACL connection timeout, ms.
 
-if BT_TLX
+if BT_B9X
 config TL_BLE_CTRL_RF_POWER
 	int "Tx power, dbm"
 	default 8
