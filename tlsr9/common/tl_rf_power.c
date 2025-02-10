@@ -138,39 +138,19 @@ const uint8_t tl_tx_pwr_lt[] = {
 	RF_POWER_N0p54dBm,    /**<  -0.5 dbm:  -2 */
 	RF_POWER_N0p22dBm,    /**<  -0.2 dbm:  -1 */
 	RF_POWER_P0p08dBm,    /**<   0.0 dbm:   0 */
-	RF_POWER_P0p34dBm,    /**<   0.3 dbm:   1 */
-	RF_POWER_P0p64dBm,    /**<   0.6 dbm:   2 */
-	RF_POWER_P0p91dBm,    /**<   0.9 dbm:   3 */
-	RF_POWER_P1p19dBm,    /**<   1.2 dbm:   4 */
-	RF_POWER_P1p65dBm,    /**<   1.6 dbm:   5 */
-	RF_POWER_P2p03dBm,    /**<   2.0 dbm:   6 */
-	RF_POWER_P2p45dBm,    /**<   2.5 dbm:   7 */
-	RF_POWER_P3p03dBm,    /**<   3.0 dbm:   8 */
-	RF_POWER_P3p55dBm,    /**<   3.5 dbm:   9 */
-	RF_POWER_P4p13dBm,    /**<   4.0 dbm:  10 */
-	RF_POWER_P4p52dBm,    /**<   4.5 dbm:  11 */
-	RF_POWER_P4p73dBm,    /**<   4.7 dbm:  12 */
-	RF_POWER_P5p00dBm,    /**<   5.0 dbm:  13 */
-	RF_POWER_P5p09dBm,    /**<   5.1 dbm:  14 */
-	RF_POWER_P5p25dBm,    /**<   5.2 dbm:  15 */
-	RF_POWER_P5p54dBm,    /**<   5.5 dbm:  16 */
-	RF_POWER_P5p93dBm,    /**<   5.9 dbm:  17 */
+	RF_POWER_P0p91dBm,    /**<   0.9 dbm:   1 */
+	RF_POWER_P2p03dBm,    /**<   2.0 dbm:   2 */
+	RF_POWER_P3p03dBm,    /**<   3.0 dbm:   3 */
+	RF_POWER_P4p13dBm,    /**<   4.0 dbm:   4*/
+	RF_POWER_P5p00dBm,    /**<   5.0 dbm:   5 */
 
 	/*VBAT*/
-	RF_POWER_P6p05dBm,    /**<   6.0 dbm:  18 */
-	RF_POWER_P6p48dBm,    /**<   6.5 dbm:  19 */
-	RF_POWER_P6p97dBm,    /**<   7.0 dbm:  20 */
-	RF_POWER_P7p19dBm,    /**<   7.2 dbm:  21 */
-	RF_POWER_P7p63dBm,    /**<   7.6 dbm:  22 */
-	RF_POWER_P8p03dBm,    /**<   8.0 dbm:  23 */
-	RF_POWER_P8p41dBm,    /**<   8.4 dbm:  24 */
-	RF_POWER_P9p10dBm,    /**<   9.0 dbm:  25 */
-	RF_POWER_P9p50dBm,    /**<   9.5 dbm:  26 */
-	RF_POWER_P10p00dBm,   /**<  10.0 dbm:  27 */
-	RF_POWER_P10p56dBm,   /**<  10.5 dbm:  28 */
-	RF_POWER_P10p78dBm,   /**<  10.8 dbm:  29 */
-	RF_POWER_P11p16dBm,   /**<  11.1 dbm:  30 */
-	RF_POWER_P11p33dBm    /**<  11.3 dbm:  31 */
+	RF_POWER_P6p05dBm,    /**<   6.0 dbm:   6 */
+	RF_POWER_P6p97dBm,    /**<   7.0 dbm:   7 */
+	RF_POWER_P8p03dBm,    /**<   8.0 dbm:   8 */
+	RF_POWER_P9p10dBm,    /**<   9.0 dbm:   9 */
+	RF_POWER_P10p00dBm,   /**<  10.0 dbm:  10 */
+	RF_POWER_P11p16dBm,   /**<  11.1 dbm:  11 */
 };
 
 

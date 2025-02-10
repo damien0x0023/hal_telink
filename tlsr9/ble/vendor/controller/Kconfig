@@ -46,16 +46,16 @@ config TL_BLE_CTRL_RF_POWER
 	default 3
 	range -30 9
 	help
-	  Telink TLX BLE TX power
+	  Telink B9X BLE TX power
 endif
 
 if SOC_RISCV_TELINK_TL321X
 config TL_BLE_CTRL_RF_POWER
 	int "Tx power, dbm"
-	default 8
-	range -20 31
+	default 3
+	range -20 11
 	help
-	  Telink B9X BLE TX power
+	  Telink TL321X BLE TX power
 endif
 
 if SOC_RISCV_TELINK_TL721X
@@ -64,7 +64,7 @@ config TL_BLE_CTRL_RF_POWER
 	default 7
 	range -22 21
 	help
-	  Telink B9X BLE TX power
+	  Telink TL721X BLE TX power
 endif
 
 config TL_BLE_CTRL_MASTER_MAX_NUM
