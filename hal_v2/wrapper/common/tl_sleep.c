@@ -18,6 +18,10 @@
 #include <tl_sleep.h>
 #include <ext_driver/ext_pm.h>
 
+/* Debug counters: verify that the sleep entry points are actually called. */
+volatile unsigned int dbg_tl_deep_sleep_count;
+volatile unsigned int dbg_tl_suspend_count;
+
 #if (CONFIG_BT_B9X || CONFIG_BT_TLX)
 #include <stack/ble/os_sup/os_sup.h>
 #include <tl_rf_power.h>
@@ -46,6 +50,7 @@ extern int blc_pm_handler(void);
 bool tl_suspend(uint32_t wake_stimer_tick)
 {
 	bool result = false;
+	dbg_tl_suspend_count++;
 
 #if (CONFIG_BT_B9X || CONFIG_BT_TLX)
 	enum tl_bt_controller_state state = tl_bt_controller_state();
@@ -126,6 +131,7 @@ __attribute__ ((section (".ram_code")))
 bool tl_deep_sleep(uint32_t wake_stimer_tick)
 {
 	bool result = false;
+	dbg_tl_deep_sleep_count++;
 	static volatile bool tl_sleep_retention
 	__attribute__ ((section (".retention_data"))) = false;
 
